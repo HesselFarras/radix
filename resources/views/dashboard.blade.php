@@ -1,60 +1,41 @@
 <!doctype html>
 <html lang="id">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Dashboard | Radix</title>
-    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
-    <meta name="theme-color" content="#0b2644">
-    @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @endif
-</head>
-<body class="min-h-screen bg-slate-100 pb-20 text-slate-900 md:pb-6">
-    <header class="border-b bg-white">
-        <div class="mx-auto flex max-w-6xl items-center justify-between p-4">
-            <a class="text-xl font-bold" href="{{ route('dashboard') }}">radix<span class="text-teal-600">.</span></a>
-            <nav class="hidden gap-5 text-sm md:flex" aria-label="Navigasi utama"><a href="{{ route('dashboard') }}">Dashboard</a><a href="{{ route('leaderboard.index') }}">Leaderboard</a><a href="{{ route('profile.show') }}">Profil</a></nav>
-            <span class="rounded-full bg-teal-100 px-4 py-2 text-sm font-semibold text-teal-900">⚡ {{ number_format($totalXp) }} XP</span>
-            <form method="post" action="{{ route('logout') }}">@csrf<button class="rounded-lg border px-4 py-2 text-sm">Keluar</button></form>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Dashboard | Radix</title><link rel="manifest" href="{{ asset('manifest.webmanifest') }}"><meta name="theme-color" content="#0B2345">@vite(['resources/css/app.css','resources/js/app.js'])</head>
+<body class="min-h-screen bg-[#F7F9FF] pb-24 font-sans text-[#000D25] md:pb-8">
+<x-student-header />
+@php
+    $topics = $course?->modules->flatMap->topics ?? collect();
+    $completed = $topics->whereIn('id', $completedTopicIds)->count();
+    $percent = $topics->count() ? (int) round($completed / $topics->count() * 100) : 0;
+    $currentModule = $course?->modules->first(fn ($module) => ! $module->isCompletedBy(auth()->user(), $completedTopicIds, $passedQuizIds)) ?? $course?->modules->last();
+    $nextTopic = $currentModule?->topics->first(fn ($topic) => ! $completedTopicIds->contains($topic->id));
+@endphp
+<main class="mx-auto w-full max-w-[1440px] px-4 pb-6 pt-6 sm:px-8 md:px-16 md:pt-24">
+<div class="mx-auto flex w-full max-w-[1312px] flex-col gap-1">
+<section class="grid gap-6 lg:grid-cols-[2fr_1fr]">
+<article class="relative min-h-[385px] overflow-hidden rounded-[20px] bg-[#0B2345] p-6 text-white shadow-md sm:min-h-[310px] sm:p-8">
+    <div class="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full border border-dashed border-[#69FAD8]/20"><div class="absolute inset-[12.5%] rounded-full border border-[#69FAD8]/20"><div class="absolute inset-[16.6%] rounded-full border-2 border-[#69FAD8]/20"><div class="absolute inset-[22.2%] rounded-full border border-dashed border-[#69FAD8]/20"></div></div></div></div>
+    <div class="relative z-10 flex h-full flex-col justify-between lg:flex-row lg:items-center lg:gap-8">
+        <div class="max-w-[448px]">
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-[#69FAD8]/20 px-3 py-1 text-sm font-semibold text-white shadow-sm">♨ <span>{{ $streak }} hari berturut-turut</span></span>
+            <h1 class="mt-3 text-[28px] font-bold leading-10 tracking-tight sm:text-[32px]">Halo, {{ auth()->user()->name }}</h1>
+            <p class="mt-1 text-sm leading-6 text-[#ECF4FF]">Tinggal satu topik lagi untuk menyelesaikan {{ $currentModule?->title ?? 'modulmu' }}.</p>
+            @if($currentModule && $currentModule->topics->first())<a href="{{ route('topics.show',$currentModule->topics->first()) }}" class="mt-5 inline-flex items-center gap-2 rounded-full bg-[#69FAD8] px-6 py-3 text-sm font-bold text-[#000D25]">Lanjutkan: {{ $currentModule->topics->first()->title }} →</a>@endif
+            <p class="mt-1.5 flex items-center gap-1 pl-1 text-xs text-[#ECF4FF]/75">◷ Estimasi {{ $nextTopic?->estimated_minutes ?? 6 }} menit baca</p>
         </div>
-    </header>
-    <main class="mx-auto max-w-6xl p-6">
-        <p class="text-sm text-slate-500">Dashboard / Beranda</p>
-        <h1 class="mt-3 text-3xl font-bold">Halo, {{ auth()->user()->name }}</h1>
-        @php
-            $topics = $course?->modules->flatMap->topics ?? collect();
-            $completed = $topics->whereIn('id', $completedTopicIds)->count();
-            $percent = $topics->count() ? (int) round($completed / $topics->count() * 100) : 0;
-        @endphp
-        <section class="mt-8 rounded-2xl bg-slate-900 p-6 text-white">
-            <p class="text-sm text-teal-300">Progress keseluruhan</p>
-            <p class="mt-2 text-4xl font-bold">{{ $percent }}%</p>
-            <p class="mt-2 text-slate-300">{{ $completed }} dari {{ $topics->count() }} topik selesai</p>
-        </section>
-        <section class="mt-8 grid gap-4 md:grid-cols-4">
-            @foreach ($course?->modules ?? [] as $index => $module)
-                @php
-                    $done = $module->topics->whereIn('id', $completedTopicIds)->count();
-                    $complete = $module->isCompletedBy(auth()->user(), $completedTopicIds, $passedQuizIds);
-                    $unlocked = $module->isUnlockedFor(auth()->user(), $completedTopicIds, $passedQuizIds);
-                    $status = $complete ? 'Selesai' : ($unlocked ? 'Berjalan' : 'Terkunci');
-                @endphp
-                <article class="rounded-2xl border bg-white p-5 {{ $status === 'Terkunci' ? 'opacity-60' : '' }}">
-                    <p class="text-xs font-semibold uppercase text-teal-700">{{ $status }}</p>
-                    <h2 class="mt-3 text-lg font-bold">{{ $module->title }}</h2>
-                    <p class="mt-2 text-sm text-slate-600">{{ $done }} dari {{ $module->topics->count() }} topik</p>
-                    @if ($status !== 'Terkunci')
-                        <a class="mt-4 inline-block rounded-lg bg-slate-900 px-4 py-2 text-sm text-white" href="{{ route('modules.show', $module) }}">{{ $status === 'Selesai' ? 'Tinjau ulang' : 'Lanjutkan' }}</a>
-                    @else
-                        <p class="mt-4 text-sm">Selesaikan modul sebelumnya untuk membuka.</p>
-                    @endif
-                </article>
-            @endforeach
-        </section>
-    </main>
-    <nav class="fixed inset-x-0 bottom-0 grid grid-cols-4 border-t bg-white p-2 text-center text-sm md:hidden" aria-label="Navigasi utama">
-        <a class="py-2" href="{{ route('dashboard') }}">Dashboard</a><a class="py-2" href="{{ route('sql-lab.index') }}">SQL Lab</a><a class="py-2" href="{{ route('leaderboard.index') }}">Leaderboard</a><a class="py-2" href="{{ route('profile.show') }}">Profil</a>
-    </nav>
-</body>
-</html>
+        <div class="flex shrink-0 flex-col items-center lg:pr-2"><div class="mb-3 max-w-[210px] rounded-2xl border border-[#C4C6CF]/30 bg-white px-4 py-2.5 text-center text-xs font-semibold leading-4 text-[#031D30] shadow-sm">Semangat! Join adalah kunci SQL.</div><img class="h-40 w-40 object-contain sm:h-[180px] sm:w-[190px]" src="{{ asset('images/assets/avatar.png') }}" alt="Radi"></div>
+    </div>
+</article>
+<article class="flex min-h-[311px] flex-col justify-between rounded-[20px] border border-[#C4C6CF]/40 bg-white p-6 shadow-sm sm:p-7">
+    <div><div class="flex items-center justify-between"><h2 class="text-xl font-bold">Progres Keseluruhan</h2><span class="text-xl text-[#74777F]">⌁</span></div><div class="mt-5 flex items-center gap-5"><div class="relative flex h-[130px] w-[130px] shrink-0 items-center justify-center rounded-full" style="background: conic-gradient(#00725E {{ $percent }}%, #DCE6EA 0)"><div class="flex h-[106px] w-[106px] flex-col items-center justify-center rounded-full bg-white"><strong class="text-2xl">{{ $percent }}%</strong><small class="text-[10px] font-medium uppercase tracking-wider text-[#44474E]">Selesai</small></div></div><div class="space-y-3 text-sm"><p class="flex gap-2"><span class="text-[#006B59]">✓</span><span><strong>{{ $completed }} dari {{ $topics->count() }}</strong><small class="block text-xs text-[#44474E]">topik selesai</small></span></p><p class="flex gap-2"><span class="text-[#74777F]">▱</span><span><strong>{{ $course?->modules->filter(fn ($module) => $module->isCompletedBy(auth()->user(), $completedTopicIds, $passedQuizIds))->count() ?? 0 }} dari {{ $course?->modules->count() ?? 0 }}</strong><small class="block text-xs text-[#44474E]">modul tuntas</small></span></p></div></div></div>
+    <div class="flex flex-wrap gap-2 border-t border-[#C4C6CF]/30 pt-4"><span class="rounded-xl bg-[#69FAD8] px-3 py-2 font-mono text-[13px] font-semibold">ϟ {{ number_format($totalXp) }} XP</span><span class="rounded-xl border border-[#C4C6CF]/40 bg-[#ECF4FF] px-3 py-2 text-sm font-semibold">♜ Peringkat aktif</span></div>
+</article>
+</section>
+<section class="grid gap-6 pt-3 md:grid-cols-2">
+@foreach([['route'=>'sql-lab.index','icon'=>'▣','title'=>'SQL Lab','desc'=>'Latihan query SQL interaktif','progress'=>$labProgress,'cta'=>'Buka SQL Lab'],['route'=>'erd-puzzle.index','icon'=>'♧','title'=>'ERD Puzzle','desc'=>'Susun entity dan relasi','progress'=>$erdProgress,'cta'=>'Coba ERD Puzzle']] as $shortcut)<a href="{{ route($shortcut['route']) }}" class="flex min-h-[98px] min-w-0 items-center justify-between gap-4 rounded-2xl border border-[#C4C6CF]/40 bg-white p-5 shadow-sm"><span class="flex min-w-0 items-center gap-4"><span class="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-[#0B2345] text-2xl text-white">{{ $shortcut['icon'] }}</span><span class="min-w-0"><strong class="block text-lg">{{ $shortcut['title'] }}</strong><small class="block truncate text-sm text-[#44474E]">{{ $shortcut['desc'] }} · {{ $shortcut['progress'][0] }}/{{ $shortcut['progress'][1] }} selesai</small></span></span><b class="hidden shrink-0 rounded-xl border-2 border-[#000D25] px-4 py-2 text-center text-sm sm:block">{{ $shortcut['cta'] }} →</b></a>@endforeach
+</section>
+<section class="w-full py-3"><div class="flex items-end justify-between"><div><h2 class="text-[26px] font-bold leading-10">Peta Modul</h2><p class="text-[15px] text-[#44474E]">Selesaikan berurutan untuk membuka modul berikutnya.</p></div><span class="hidden items-center gap-2 font-mono text-[13px] text-[#44474E] sm:flex"><i class="h-2.5 w-2.5 rounded-full bg-[#006B59]"></i>Semester Genap 2026/2027</span></div>
+<div class="relative mt-6 hidden h-10 items-center justify-between px-8 lg:flex"><div class="absolute left-12 right-12 border-t-2 border-dashed border-[#C4C6CF]/60"></div>@foreach($course?->modules ?? [] as $module) @php $done=$module->topics->whereIn('id',$completedTopicIds)->count(); $complete=$module->isCompletedBy(auth()->user(),$completedTopicIds,$passedQuizIds); $unlocked=$module->isUnlockedFor(auth()->user(),$completedTopicIds,$passedQuizIds); @endphp<span class="relative z-10 flex h-10 w-10 items-center justify-center rounded-full {{ $complete?'bg-[#006B59] text-white':($unlocked?'bg-[#000D25] text-white ring-4 ring-[#69FAD8]':'border border-[#C4C6CF]/50 bg-[#D7EAFF] text-[#74777F]') }}">{{ $complete?'✓':($unlocked?$loop->iteration:'♙') }}</span>@endforeach</div>
+<div class="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-4">@foreach($course?->modules ?? [] as $module) @php $done=$module->topics->whereIn('id',$completedTopicIds)->count(); $complete=$module->isCompletedBy(auth()->user(),$completedTopicIds,$passedQuizIds); $unlocked=$module->isUnlockedFor(auth()->user(),$completedTopicIds,$passedQuizIds); $status=$complete?'Selesai':($unlocked?'Berjalan':'Terkunci'); $modulePercent=$module->topics->count()?round($done/$module->topics->count()*100):0; @endphp
+<article class="flex min-h-[289px] flex-col rounded-2xl border {{ $status==='Berjalan'?'border-2 border-[#000D25] ring-2 ring-[#69FAD8]':'border-[#C4C6CF]/40' }} {{ $status==='Terkunci'?'bg-[#ECF4FF]/70':'bg-white' }} p-5 shadow-sm"><div><span class="inline-flex rounded-full px-2.5 py-1 text-xs font-bold {{ $complete?'bg-[#69FAD8] text-[#000D25]':($unlocked?'bg-[#000D25] text-white':'bg-[#D7EAFF] text-[#44474E]') }}">{{ $complete?'✓ ':($unlocked?'• ':'♙ ') }}{{ $status }}</span><h3 class="mt-4 text-lg font-bold {{ $status==='Terkunci'?'text-[#44474E]':'' }}">{{ $module->title }}</h3><p class="mt-1 text-sm text-[#44474E]">{{ $done }} dari {{ $module->topics->count() }} topik</p><div class="mt-4"><div class="flex justify-between text-xs text-[#44474E]"><span>Progress</span><strong class="font-mono text-[#000D25]">{{ $modulePercent }}%</strong></div><div class="mt-1.5 h-2 rounded-full bg-[#D7EAFF]"><div class="h-full rounded-full bg-[#006B59]" style="width:{{ $modulePercent }}%"></div></div></div>@if(!$unlocked)<p class="mt-3 rounded-lg bg-[#E2EFFF] p-2.5 text-xs leading-4 text-[#44474E]">Selesaikan modul sebelumnya untuk membuka.</p>@endif</div>@if($unlocked && $module->topics->first())<a class="mt-4 block rounded-xl {{ $complete?'bg-[#ECF4FF] text-[#000D25]':'bg-[#000D25] text-white' }} px-4 py-2.5 text-center text-sm font-bold" href="{{ route('topics.show', $module->topics->first()) }}">{{ $complete?'Tinjau ulang':'Lanjutkan' }}</a>@elseif(!$unlocked)<span class="mt-4 block rounded-xl bg-[#D7EAFF]/60 px-4 py-2.5 text-center text-sm font-semibold text-[#74777F]">♙ Terkunci</span>@else<span class="mt-4 block rounded-xl bg-[#ECF4FF] px-4 py-2.5 text-center text-sm font-semibold text-[#44474E]">Belum ada topik</span>@endif</article>@endforeach</div></section>
+</div></main><x-student-nav /></body></html>

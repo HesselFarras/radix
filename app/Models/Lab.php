@@ -24,4 +24,9 @@ class Lab extends Model
     {
         return $this->hasMany(LabStep::class)->orderBy('sort_order');
     }
+
+    public function attempts(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(LabAttempt::class, LabStep::class, 'lab_id', 'lab_step_id');
+    }
 }

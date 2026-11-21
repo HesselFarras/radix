@@ -13,25 +13,29 @@ class TopicController extends Controller
 {
     public function show(Topic $topic): View
     {
-        abort_unless($topic->is_published, 404);
+        abort_unless($topic->is_published && $topic->module->is_published, 404);
 
-        $topic->load(['module.course', 'module.topics']);
+        $topic->load(['module.course', 'module.topics' => fn ($query) => $query->where('is_published', true), 'module.quizzes' => fn ($query) => $query->where('is_published', true), 'understanding']);
         $progress = auth()->user()->topicProgress()->firstOrCreate(
             ['topic_id' => $topic->id],
             ['last_read_at' => now()],
         );
         $progress->update(['last_read_at' => now()]);
+        $completedTopicIds = auth()->user()->topicProgress()
+            ->whereIn('topic_id', $topic->module->topics->pluck('id'))
+            ->whereNotNull('completed_at')
+            ->pluck('topic_id');
         $annotations = auth()->user()->annotations()
             ->where('topic_id', $topic->id)
             ->latest()
             ->get();
 
-        return view('topics.show', compact('topic', 'progress', 'annotations'));
+        return view('topics.show', compact('topic', 'progress', 'annotations', 'completedTopicIds'));
     }
 
     public function complete(Topic $topic): RedirectResponse
     {
-        abort_unless($topic->is_published, 404);
+        abort_unless($topic->is_published && $topic->module()->where('is_published', true)->whereHas('course', fn ($query) => $query->where('is_published', true))->exists(), 404);
 
         TopicProgress::updateOrCreate(
             ['user_id' => auth()->id(), 'topic_id' => $topic->id],
@@ -43,7 +47,7 @@ class TopicController extends Controller
 
     public function annotate(Request $request, Topic $topic): RedirectResponse
     {
-        abort_unless($topic->is_published, 404);
+        abort_unless($topic->is_published && $topic->module()->where('is_published', true)->whereHas('course', fn ($query) => $query->where('is_published', true))->exists(), 404);
 
         $data = $request->validate([
             'type' => ['required', 'in:highlight,bookmark'],

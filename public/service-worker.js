@@ -11,7 +11,8 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-    if (event.request.method !== 'GET') return;
+    if (event.request.method !== 'GET' || event.request.url.includes('/vendor/sql-wasm')) return;
+    // WASM stays network-only to avoid serving a stale or incomplete binary.
 
     event.respondWith(
         fetch(event.request)

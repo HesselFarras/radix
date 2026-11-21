@@ -1,29 +1,6 @@
 <!doctype html>
 <html lang="id">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Daftar | Radix</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-</head>
-<body class="min-h-screen bg-slate-100 p-6 text-slate-900">
-    <main class="mx-auto mt-12 max-w-md rounded-2xl bg-white p-8 shadow">
-        <p class="text-sm font-semibold uppercase tracking-widest text-teal-600">Radix · Basis Data · PWA</p>
-        <h1 class="mt-4 text-3xl font-bold">Daftar Akun Mahasiswa</h1>
-        <p class="mt-2 text-slate-600">Buat akun untuk mulai belajar.</p>
-        @if ($errors->any())
-            <div class="mt-5 rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">{{ $errors->first() }}</div>
-        @endif
-        <form method="post" action="{{ route('register.store') }}" class="mt-8 space-y-4">
-            @csrf
-            <label class="block"><span class="font-medium">Nama Lengkap</span><input name="name" value="{{ old('name') }}" required autocomplete="name" class="mt-2 w-full rounded-lg border p-3"></label>
-            <label class="block"><span class="font-medium">NIM</span><input name="nim" value="{{ old('nim') }}" required class="mt-2 w-full rounded-lg border p-3"></label>
-            <label class="block"><span class="font-medium">Email</span><input name="email" type="email" value="{{ old('email') }}" required autocomplete="email" class="mt-2 w-full rounded-lg border p-3"></label>
-            <label class="block"><span class="font-medium">Kata Sandi</span><input name="password" type="password" required autocomplete="new-password" class="mt-2 w-full rounded-lg border p-3"></label>
-            <label class="block"><span class="font-medium">Konfirmasi Kata Sandi</span><input name="password_confirmation" type="password" required autocomplete="new-password" class="mt-2 w-full rounded-lg border p-3"></label>
-            <button class="w-full rounded-lg bg-slate-900 p-3 font-semibold text-white">Daftar Sekarang</button>
-        </form>
-        <p class="mt-6 text-center text-sm"><a class="font-semibold text-teal-700" href="{{ route('login') }}">Masuk di sini</a></p>
-    </main>
-</body>
-</html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Daftar | Radix</title>@vite(['resources/css/app.css','resources/js/app.js'])</head>
+<body class="min-h-screen overflow-x-hidden bg-[#EEF3F5] p-4 text-[#0B2345] sm:p-8"><header class="mx-auto flex max-w-[1344px] items-center justify-between"><a href="{{ route('home') }}" class="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-[#334A5E]">← Kembali</a><span class="hidden items-center gap-2 rounded-full border border-[#D5E0E6] bg-white/70 px-3 py-1.5 text-xs text-[#334A5E] sm:inline-flex"><i class="h-2 w-2 rounded-full bg-[#19C3A4]"></i>Mode masuk · Registrasi</span></header>
+<main class="mx-auto mt-8 grid w-full max-w-[1200px] overflow-hidden rounded-[20px] border border-[#D5E0E6] bg-white shadow-[0_20px_35px_-5px_rgba(11,35,69,.08)] lg:min-h-[640px] lg:grid-cols-[.92fr_1fr]"><section class="relative hidden overflow-hidden bg-[#0B2345] p-8 text-white sm:p-12 lg:flex lg:flex-col"><div class="absolute -bottom-28 -right-28 h-[380px] w-[380px] rounded-full border border-[#19C3A4]/15"></div><div class="absolute -bottom-16 -right-16 h-[270px] w-[270px] rounded-full border border-[#19C3A4]/20"></div><div class="relative flex items-center gap-3"><img class="h-20 w-20 rounded-[20px] bg-[#EEF3F5] object-contain p-2" src="{{ asset('images/assets/logoradix.png') }}" alt="Radix"><div><strong class="block text-3xl">Radix</strong><small class="font-mono text-xs uppercase tracking-[.2em] text-[#19C3A4]">Basis Data</small></div></div><div class="relative my-auto"><h1 class="max-w-md text-3xl font-bold leading-10">Belajar Basis Data, langsung praktik.</h1><p class="mt-4 max-w-md text-sm leading-6 text-[#EEF3F5]/90">Fondasi digital untuk belajar Basis Data: materi berjenjang, SQL Lab di browser, dan tantangan yang bikin semangat.</p></div><ul class="relative grid gap-3 border-t border-white/10 pt-5 text-sm text-white/95"><li>◉ Materi berjenjang dari dasar sampai lanjut</li><li>◉ SQL Lab langsung di browser</li><li>◉ XP, badge, dan leaderboard</li></ul></section><section class="flex items-center p-6 sm:p-12 lg:p-14"><div class="w-full"><p class="text-xs font-bold uppercase tracking-[.16em] text-[#334A5E]">Masuk akun</p><h2 class="mt-2 text-2xl font-bold sm:text-[28px]">Daftar Akun Mahasiswa</h2><p class="mt-1 text-sm text-[#334A5E]">Buat akun baru untuk mulai belajar basis data interaktif.</p>@if($errors->any())<div class="mt-5 rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">{{ $errors->first() }}</div>@endif
+<form method="post" action="{{ route('register.store') }}" class="mt-7 grid gap-4 sm:grid-cols-2">@csrf<label class="sm:col-span-2"><span class="text-sm font-semibold">Nama Lengkap</span><input name="name" value="{{ old('name') }}" required autocomplete="name" class="mt-1.5 h-12 w-full rounded-lg border border-[#D5E0E6] px-4 text-base outline-none focus:border-[#19C3A4] focus:ring-2 focus:ring-[#19C3A4]/30"></label><label><span class="text-sm font-semibold">NIM</span><input name="nim" value="{{ old('nim') }}" required class="mt-1.5 h-12 w-full rounded-lg border border-[#D5E0E6] px-4 text-base outline-none focus:border-[#19C3A4] focus:ring-2 focus:ring-[#19C3A4]/30"></label><label><span class="text-sm font-semibold">Email Kampus</span><input name="email" type="email" value="{{ old('email') }}" required autocomplete="email" class="mt-1.5 h-12 w-full rounded-lg border border-[#D5E0E6] px-4 text-base outline-none focus:border-[#19C3A4] focus:ring-2 focus:ring-[#19C3A4]/30"></label><label><span class="text-sm font-semibold">Kata Sandi</span><input name="password" type="password" required autocomplete="new-password" class="mt-1.5 h-12 w-full rounded-lg border border-[#D5E0E6] px-4 text-base outline-none focus:border-[#19C3A4] focus:ring-2 focus:ring-[#19C3A4]/30"></label><label><span class="text-sm font-semibold">Konfirmasi Kata Sandi</span><input name="password_confirmation" type="password" required autocomplete="new-password" class="mt-1.5 h-12 w-full rounded-lg border border-[#D5E0E6] px-4 text-base outline-none focus:border-[#19C3A4] focus:ring-2 focus:ring-[#19C3A4]/30"></label><button class="sm:col-span-2 h-[54px] rounded-xl bg-[#0B2345] font-bold text-white shadow-sm hover:bg-[#163c6d]">Daftar Sekarang →</button></form><p class="mt-6 border-t border-[#D5E0E6] pt-4 text-center text-sm text-[#0B2345]">Sudah punya akun? <a class="font-bold underline" href="{{ route('login') }}">Masuk di sini</a></p></div></section></main></body></html>

@@ -1,58 +1,323 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Radix
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Platform pembelajaran interaktif untuk materi basis data, SQL, model data, ERD, normalisasi, dan keamanan database.
 
-## About Laravel
+## Fitur
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### Learner
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- Dashboard progres, XP, streak, modul aktif, dan topik berikutnya.
+- Module Reader dengan syllabus, materi, code block, catatan, highlight, dan bookmark.
+- Quiz modul serta Check Your Understanding.
+- SQL Lab berbasis SQL.js di browser:
+  - Query akademik.
+  - Fungsi SQL.
+  - DDL/DML toko komputer.
+  - JOIN nilai mahasiswa.
+  - Audit saldo.
+  - Schema dan sample data per lab.
+  - Draft `localStorage`, tombol Run, Submit, Copy, keyword SQL, progress, dan riwayat attempt.
+- ERD Puzzle interaktif:
+  - Cat Store.
+  - Rental Mobil.
+  - Akademik.
+  - Entity, atribut, relation, dan cardinality.
+  - Scoring, feedback, XP, dan riwayat attempt.
+- Leaderboard, profile, settings, certificate, onboarding, dan authentication.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Admin
 
-## Learning Laravel
+- Dashboard admin.
+- Content/topic management.
+- SQL Lab dan step CRUD.
+- ERD Puzzle, component, dan relation management.
+- Quiz dan badge management.
+- User activation, leaderboard visibility, dan reset progress per modul.
+- Audit log.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Tech stack
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- PHP `^8.3`
+- Laravel `^13.17`
+- MySQL
+- Laravel Blade
+- Tailwind CSS `^4`
+- Vite `^8`
+- SQL.js `^1.17`
+- PHPUnit `^12`
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## Persyaratan
 
-## Agentic Development
+- PHP 8.3+
+- Composer
+- Node.js dan npm
+- MySQL 8+
+- Git
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Instalasi
+
+Clone repository, lalu masuk ke folder project:
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone <repository-url> radix
+cd radix
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Install dependency PHP:
 
-## Contributing
+```bash
+composer install
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Buat file environment:
 
-## Code of Conduct
+```bash
+copy .env.example .env
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Linux/macOS:
 
-## Security Vulnerabilities
+```bash
+cp .env.example .env
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Generate application key:
+
+```bash
+php artisan key:generate
+```
+
+Atur koneksi database di `.env`:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=radix
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+Buat database `radix`, lalu jalankan migration dan seed:
+
+```bash
+php artisan migrate --force
+php artisan db:seed --force
+```
+
+Install dan build frontend:
+
+```bash
+npm install
+npm run build
+```
+
+Jalankan aplikasi:
+
+```bash
+php artisan serve
+```
+
+Buka `http://127.0.0.1:8000`.
+
+## Development
+
+Jalankan Vite dalam mode watch:
+
+```bash
+npm run dev
+```
+
+Jalankan server Laravel:
+
+```bash
+php artisan serve
+```
+
+Atau gunakan command development Composer jika environment mendukung:
+
+```bash
+composer run dev
+```
+
+## Seed data
+
+Seeder membuat course basis data, modul, topic, quiz, SQL Lab, ERD Puzzle, badge, dan akun development.
+
+```bash
+php artisan db:seed --force
+```
+
+Seeder menggunakan `updateOrCreate` untuk konten utama. Hindari menjalankan reset progress secara manual kecuali memang diperlukan karena data pengerjaan learner bersifat persisten.
+
+Cek kesehatan konten pembelajaran:
+
+```bash
+php artisan radix:report-learning-content
+```
+
+Output melaporkan jumlah SQL Lab, step, ERD Puzzle, component, dan relation.
+
+## Akun development
+
+Seeder menyediakan akun administrator:
+
+```text
+Email: admin@radix.test
+Password: password
+```
+
+Gunakan password development saja. Ganti password sebelum deployment.
+
+Akun student dapat dibuat melalui halaman register.
+
+## Testing
+
+Jalankan seluruh test:
+
+```bash
+php artisan test --compact
+```
+
+Atau:
+
+```bash
+composer test
+```
+
+Test mencakup authentication, onboarding, module progress, quiz, SQL Lab, ERD Puzzle, leaderboard, settings, admin authorization, dan security headers.
+
+## Production check
+
+Urutan yang disarankan:
+
+```bash
+php artisan optimize:clear
+php artisan migrate --force
+npm run build
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+```
+
+Jalankan test sebelum cache production:
+
+```bash
+php artisan optimize:clear
+php artisan test --compact
+```
+
+`config:cache`, `route:cache`, dan `view:cache` dijalankan setelah test selesai agar environment testing tidak memakai konfigurasi production cache.
+
+## Struktur utama
+
+```text
+app/
+  Http/Controllers/       Controller learner dan admin
+  Models/                  Model Eloquent
+  Services/                Service domain
+  Providers/               Service provider
+
+database/
+  migrations/              Struktur database
+  seeders/                 Konten course dan data development
+
+resources/
+  views/                   Blade learner dan admin
+  js/                      Entry point frontend
+  css/                     Tailwind CSS
+
+routes/
+  web.php                  Route learner dan admin
+  console.php              Artisan command
+
+tests/Feature/             Regression test aplikasi
+```
+
+## Route utama
+
+### Learner
+
+- `/dashboard`
+- `/modules/{module}`
+- `/topics/{topic}`
+- `/sql-lab`
+- `/erd-puzzle`
+- `/leaderboard`
+- `/profile`
+- `/settings`
+- `/certificate`
+
+### Admin
+
+- `/admin`
+- `/admin/content`
+- `/admin/labs`
+- `/admin/erd-puzzles`
+- `/admin/quizzes`
+- `/admin/badges`
+- `/admin/users`
+- `/admin/audit-logs`
+
+Semua route admin dilindungi middleware `auth` dan `admin`.
+
+## Data dan progress
+
+Progress learner disimpan secara dinamis, bukan hardcode:
+
+- Topic completion.
+- Understanding attempts.
+- Quiz attempts.
+- SQL Lab attempts.
+- ERD attempts.
+- XP transactions.
+- Badge ownership.
+- Dashboard streak berdasarkan tanggal aktivitas.
+
+SQL Lab memproses query di browser melalui SQL.js. Query dan hasil submit tetap divalidasi server-side untuk scoring dan XP.
+
+## Catatan pengembangan
+
+- Jangan menggunakan `Lab::query()->delete()` atau penghapusan global saat seed.
+- Konten lab dan puzzle memakai unique key per module dan title.
+- Jangan menghapus attempt learner ketika memperbarui konten.
+- ERD submission hanya menerima component dan relation milik puzzle aktif.
+- XP memakai idempotency key agar tidak diberikan dua kali untuk step/puzzle yang sama.
+- Reset progress harus dilakukan melalui alur admin yang terkontrol.
+
+## Troubleshooting
+
+### SQL Lab tidak muncul
+
+Jalankan:
+
+```bash
+php artisan db:seed --force
+php artisan radix:report-learning-content
+```
+
+Pastikan lab memiliki `is_published = 1`.
+
+### Asset frontend tidak ditemukan
+
+```bash
+npm install
+npm run build
+```
+
+### Test mengembalikan HTTP 419
+
+Bersihkan cache sebelum test:
+
+```bash
+php artisan optimize:clear
+php artisan test --compact
+```
+
+### Migration unique gagal
+
+Periksa duplicate data pada `labs`, `erd_puzzles`, `erd_components`, dan `erd_relations` sebelum menjalankan migration production.
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Project ini menggunakan MIT License, mengikuti konfigurasi Laravel project.

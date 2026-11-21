@@ -42,7 +42,9 @@ class LearningFlowTest extends TestCase
         $this->get(route('modules.show', $module))->assertOk()->assertSee($topic->title);
         $this->get(route('topics.show', $topic))->assertOk()->assertSee('Materi');
         $this->post(route('topics.complete', $topic))->assertRedirect(route('topics.show', $topic));
+        $this->post(route('topics.complete', $topic))->assertRedirect(route('topics.show', $topic));
 
+        $this->assertDatabaseCount('topic_progress', 1);
         $this->assertDatabaseHas('topic_progress', [
             'user_id' => $user->id,
             'topic_id' => $topic->id,
@@ -58,5 +60,18 @@ class LearningFlowTest extends TestCase
         $this->assertSame($user->id, $annotation->user_id);
         $this->delete(route('annotations.destroy', $annotation))->assertRedirect(route('topics.show', $topic));
         $this->assertDatabaseMissing('annotations', ['id' => $annotation->id]);
+    }
+
+    public function test_student_cannot_delete_another_users_annotation(): void
+    {
+        $owner = User::factory()->create();
+        $attacker = User::factory()->create();
+        $course = Course::create(['title' => 'Course', 'slug' => 'course', 'is_published' => true]);
+        $module = Module::create(['course_id' => $course->id, 'title' => 'Module', 'slug' => 'module', 'sort_order' => 1, 'is_published' => true]);
+        $topic = Topic::create(['module_id' => $module->id, 'title' => 'Topic', 'slug' => 'topic', 'content_json' => ['blocks' => []], 'sort_order' => 1, 'is_published' => true]);
+        $annotation = $owner->annotations()->create(['topic_id' => $topic->id, 'type' => 'bookmark']);
+
+        $this->actingAs($attacker)->delete(route('annotations.destroy', $annotation))->assertForbidden();
+        $this->assertDatabaseHas('annotations', ['id' => $annotation->id]);
     }
 }

@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
 
 class AuthController extends Controller
@@ -34,6 +35,40 @@ class AuthController extends Controller
     public function showRegister(): View
     {
         return view('auth.register');
+    }
+
+    public function showForgotPassword(): View
+    {
+        return view('auth.forgot-password');
+    }
+
+    public function sendResetLink(Request $request): RedirectResponse
+    {
+        $request->validate(['email' => ['required', 'email']]);
+        $status = Password::sendResetLink($request->only('email'));
+
+        return back()->with('status', __($status));
+    }
+
+    public function showResetPassword(string $token): View
+    {
+        return view('auth.reset-password', ['token' => $token, 'email' => request('email')]);
+    }
+
+    public function resetPassword(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'token' => ['required'],
+            'email' => ['required', 'email'],
+            'password' => ['required', 'confirmed', 'min:8'],
+        ]);
+        $status = Password::reset($data, function (User $user, string $password): void {
+            $user->forceFill(['password' => $password])->save();
+        });
+
+        return $status === Password::PASSWORD_RESET
+            ? redirect()->route('login')->with('status', __($status))
+            : back()->withErrors(['email' => __($status)]);
     }
 
     public function register(Request $request): RedirectResponse

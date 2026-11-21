@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('module_id')->constrained()->cascadeOnDelete();
             $table->string('title');
+            $table->unique(['module_id', 'title']);
             $table->text('case_text');
             $table->text('instructions')->nullable();
             $table->unsignedSmallInteger('max_score')->default(100);

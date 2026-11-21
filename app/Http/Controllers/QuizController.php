@@ -13,7 +13,7 @@ class QuizController extends Controller
 {
     public function show(Quiz $quiz): View
     {
-        abort_unless($quiz->is_published, 404);
+        abort_unless($quiz->is_published && $quiz->module()->where('is_published', true)->whereHas('course', fn ($query) => $query->where('is_published', true))->exists(), 404);
         $quiz->load(['module', 'questions.options']);
 
         return view('quizzes.show', compact('quiz'));
@@ -21,9 +21,11 @@ class QuizController extends Controller
 
     public function submit(Request $request, Quiz $quiz, BadgeEvaluator $badges): View
     {
-        abort_unless($quiz->is_published, 404);
+        abort_unless($quiz->is_published && $quiz->module()->where('is_published', true)->whereHas('course', fn ($query) => $query->where('is_published', true))->exists(), 404);
         $quiz->load('questions.options');
         $answers = $request->validate(['answers' => ['required', 'array']])['answers'];
+        $questionIds = $quiz->questions->pluck('id')->map(fn ($id) => (string) $id)->all();
+        abort_unless(count($answers) === count($questionIds) && ! array_diff($questionIds, array_map('strval', array_keys($answers))), 422, 'Semua soal wajib dijawab.');
         $total = $quiz->questions->sum('points');
         $earned = 0;
 
@@ -49,7 +51,7 @@ class QuizController extends Controller
 
             if ($xp > 0) {
                 $transaction = XpTransaction::firstOrCreate(
-                    ['idempotency_key' => 'quiz-attempt-'.$attempt->id],
+                    ['idempotency_key' => 'quiz-user-'.auth()->id().'-'.$quiz->id],
                     [
                         'user_id' => auth()->id(),
                         'source_type' => 'quiz_attempt',

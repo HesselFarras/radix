@@ -9,16 +9,25 @@ class LeaderboardController extends Controller
 {
     public function __invoke(): View
     {
-        $visibleUsers = User::query()
+        $scope = User::query()
             ->where('is_active', true)
-            ->where('is_leaderboard_visible', true)
+            ->where('is_leaderboard_visible', true);
+        $topUsers = (clone $scope)
             ->orderByDesc('total_xp')
             ->orderBy('name')
+            ->limit(10)
             ->get();
 
         $currentUser = auth()->user();
-        $position = $visibleUsers->search(fn (User $user) => $user->is($currentUser));
-        $topUsers = $visibleUsers->take(10);
+        $isVisible = $currentUser->is_active && $currentUser->is_leaderboard_visible;
+        $position = $isVisible
+            ? (clone $scope)->where(function ($query) use ($currentUser): void {
+                $query->where('total_xp', '>', $currentUser->total_xp)
+                    ->orWhere(function ($query) use ($currentUser): void {
+                        $query->where('total_xp', $currentUser->total_xp)->where('name', '<', $currentUser->name);
+                    });
+            })->count() + 1
+            : null;
 
         return view('leaderboard.index', [
             'topUsers' => $topUsers,

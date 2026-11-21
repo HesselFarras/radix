@@ -21,7 +21,7 @@ class DashboardController extends Controller
         $totalTopics = $course?->modules->flatMap->topics->count() ?? 0;
         $completedTopics = TopicProgress::whereNotNull('completed_at')
             ->select(['user_id', 'topic_id'])
-            ->distinct()
+            ->groupBy(['user_id', 'topic_id'])
             ->get()
             ->count();
         $completionRate = $totalTopics && $activeUsers ? round($completedTopics / ($totalTopics * $activeUsers) * 100, 1) : 0;

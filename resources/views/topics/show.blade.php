@@ -1,64 +1,37 @@
 <!doctype html>
 <html lang="id">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{{ $topic->title }} | Radix</title>@if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot'))) @vite(['resources/css/app.css', 'resources/js/app.js']) @endif</head>
-<body class="min-h-screen bg-slate-100 text-slate-900">
-    <main class="mx-auto grid max-w-6xl gap-6 p-6 lg:grid-cols-[18rem_1fr]">
-        <aside class="rounded-2xl bg-white p-5">
-            <a class="text-sm" href="{{ route('modules.show', $topic->module) }}">← Kembali ke Silabus</a>
-            <h1 class="mt-4 text-xl font-bold">{{ $topic->module->title }}</h1>
-            <nav class="mt-5 space-y-2 text-sm">
-                @foreach ($topic->module->topics as $item)
-                    <a class="block rounded-lg px-3 py-2 {{ $item->is($topic) ? 'bg-teal-100 font-semibold' : 'hover:bg-slate-100' }}" href="{{ route('topics.show', $item) }}">{{ $item->title }}</a>
-                @endforeach
-            </nav>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{{ $topic->title }} | Radix</title>@vite(['resources/css/app.css', 'resources/js/app.js'])</head>
+<body class="min-h-screen overflow-x-hidden bg-[#F7F9FF] pb-24 text-[#000D25] md:pb-8">
+<x-student-header />
+@php
+    $topics = $topic->module->topics->values();
+    $index = $topics->search(fn ($item) => $item->is($topic));
+    $previous = $index > 0 ? $topics[$index - 1] : null;
+    $next = $index < $topics->count() - 1 ? $topics[$index + 1] : null;
+    $moduleQuiz = $topic->module->quizzes->first();
+    $completedCount = $completedTopicIds->count();
+@endphp
+<main class="pt-[64px]"><div class="mx-auto w-full max-w-[1440px] px-4 py-6 sm:px-8 lg:px-16">
+    <div class="flex items-center justify-between gap-4"><a class="text-sm font-semibold text-slate-600 hover:text-teal-700" href="{{ route('dashboard') }}">← Kembali ke Dashboard</a><p class="hidden text-sm text-slate-500 sm:block">Dashboard / {{ $topic->module->title }} / <strong>{{ $topic->title }}</strong></p></div>
+    <div class="mt-6 grid gap-6 lg:grid-cols-[280px_minmax(0,978px)] lg:justify-between">
+        <aside class="h-fit rounded-xl bg-white p-5 shadow-[0_2px_8px_rgba(11,35,69,.04)] lg:sticky lg:top-24">
+            <div class="flex items-start justify-between gap-3"><div><p class="text-xs font-bold uppercase tracking-widest text-teal-700">Silabus modul</p><h1 class="mt-3 text-xl font-bold">{{ $topic->module->title }}</h1></div><span class="text-sm text-slate-500">{{ $topics->count() ? round(($completedCount + ($progress->completed_at ? 1 : 0)) / $topics->count() * 100) : 0 }}%</span></div>
+            <div class="mt-4 h-2 overflow-hidden rounded-full bg-slate-100"><div class="h-full rounded-full bg-teal-600" style="width: {{ $topics->count() ? round(($completedCount + ($progress->completed_at ? 1 : 0)) / $topics->count() * 100) : 0 }}%"></div></div>
+            <p class="mt-2 text-xs text-slate-500">{{ $completedCount + ($progress->completed_at ? 1 : 0) }} dari {{ $topics->count() }} topik selesai</p>
+            <nav class="mt-6 space-y-2" aria-label="Silabus topik">@foreach ($topics as $item)<a class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm {{ $item->is($topic) ? 'bg-teal-100 font-bold text-[#102b50]' : 'text-slate-600 hover:bg-slate-50' }}" href="{{ route('topics.show', $item) }}"><span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full {{ $item->is($topic) ? 'bg-teal-500 text-white' : 'bg-slate-100' }}">{{ $item->is($topic) ? '•' : $loop->iteration }}</span><span class="min-w-0 truncate">{{ $item->title }}</span>@if ($item->is($topic))<span class="ml-auto text-[10px] uppercase">Aktif</span>@endif</a>@endforeach</nav>
+            @if ($topic->understanding)<a class="mt-5 block rounded-xl bg-blue-50 p-4 text-sm hover:bg-blue-100" href="{{ route('understandings.show', $topic->understanding) }}"><strong>◎ Check Your Understanding</strong><span class="mt-1 block text-slate-500">Uji pemahaman materi</span></a>@endif
         </aside>
-        <article class="rounded-2xl bg-white p-6">
-            @if (session('status'))<p class="mb-4 rounded-lg bg-teal-50 p-3 text-sm text-teal-800" role="status">{{ session('status') }}</p>@endif
-            <p class="text-sm text-slate-500">Estimasi baca {{ $topic->estimated_minutes }} menit</p>
-            <h2 class="mt-2 text-3xl font-bold">{{ $topic->title }}</h2>
-            <div class="mt-6 space-y-4">
-                @foreach ($topic->content_json['blocks'] ?? [] as $block)
-                    @if ($block['type'] === 'paragraph')<p>{{ $block['text'] }}</p>
-                    @elseif ($block['type'] === 'tip')<aside class="rounded-xl bg-teal-50 p-4"><h3 class="font-semibold">{{ $block['title'] }}</h3><p class="mt-1 text-sm">{{ $block['text'] }}</p></aside>
-                    @endif
-                @endforeach
-            </div>
-            <div class="mt-8 grid gap-4 lg:grid-cols-2">
-                <form method="post" action="{{ route('annotations.store', $topic) }}" class="space-y-3 rounded-xl border p-4">
-                    @csrf
-                    <label class="block text-sm font-medium">Jenis catatan
-                        <select name="type" class="mt-1 w-full rounded-lg border p-3">
-                            <option value="highlight">Highlight</option>
-                            <option value="bookmark">Bookmark</option>
-                        </select>
-                    </label>
-                    <label class="block text-sm font-medium">Teks terpilih
-                        <textarea name="selected_text" class="mt-1 w-full rounded-lg border p-3" maxlength="5000"></textarea>
-                    </label>
-                    <label class="block text-sm font-medium">Catatan
-                        <textarea name="note" class="mt-1 w-full rounded-lg border p-3" maxlength="1000"></textarea>
-                    </label>
-                    <button class="rounded-lg border px-4 py-2 text-sm">Simpan catatan</button>
-                </form>
-                <section class="rounded-xl bg-slate-50 p-4">
-                    <h3 class="font-semibold">Catatan saya</h3>
-                    @forelse ($annotations as $annotation)
-                        <article class="mt-3 rounded-lg bg-white p-3 text-sm">
-                            <p class="font-semibold">{{ $annotation->type === 'highlight' ? 'Highlight' : 'Bookmark' }}</p>
-                            <p class="mt-1">{{ $annotation->selected_text }}</p>
-                            <p class="mt-1 text-slate-600">{{ $annotation->note }}</p>
-                            <form method="post" action="{{ route('annotations.destroy', $annotation) }}">@csrf @method('delete')<button class="mt-2 text-red-700">Hapus</button></form>
-                        </article>
-                    @empty
-                        <p class="mt-3 text-sm text-slate-500">Belum ada highlight atau bookmark.</p>
-                    @endforelse
-                </section>
-            </div>
-            @if ($topic->understanding)
-                <a class="mt-8 inline-block rounded-lg border border-teal-700 px-5 py-3 text-teal-800" href="{{ route('understandings.show', $topic->understanding) }}">Check Your Understanding</a>
-            @endif
-            <form class="mt-8" method="post" action="{{ route('topics.complete', $topic) }}">@csrf<button class="rounded-lg bg-slate-900 px-5 py-3 text-white">{{ $progress->completed_at ? 'Selesai' : 'Tandai selesai' }}</button></form>
+        <article>
+            @if (session('status'))<p class="mb-4 rounded-xl bg-teal-50 p-3 text-sm text-teal-800" role="status">{{ session('status') }}</p>@endif
+            <div class="flex flex-wrap items-center gap-2"><span class="rounded-full bg-teal-100 px-3 py-1 text-xs font-bold text-teal-800">Pertemuan {{ $index + 1 }}</span><span class="rounded-full bg-white px-3 py-1 text-xs text-slate-600">◷ Estimasi baca {{ $topic->estimated_minutes }} menit</span><span class="rounded-full bg-white px-3 py-1 text-xs text-slate-600">▤ Basis Data</span></div>
+            <div class="mt-4 flex items-start justify-between gap-4"><h2 class="text-3xl font-bold tracking-tight sm:text-4xl">{{ $topic->title }}</h2><span class="hidden rounded-xl bg-white px-4 py-3 text-slate-500 sm:block">✎ &nbsp; ☆</span></div>
+            <section class="mt-6 rounded-xl bg-white p-6 shadow-[0_2px_8px_rgba(11,35,69,.04)] sm:p-10">
+                <div class="space-y-5 text-lg leading-8 text-slate-600">@foreach ($topic->content_json['blocks'] ?? [] as $block) @if (($block['type'] ?? '') === 'paragraph')<p>{{ $block['text'] }}</p>@elseif (($block['type'] ?? '') === 'tip')<aside class="rounded-2xl bg-teal-50 p-5 text-base leading-6 text-slate-700"><h3 class="font-bold text-[#102b50]">💡 {{ $block['title'] }}</h3><p class="mt-2">{{ $block['text'] }}</p></aside>@elseif (($block['type'] ?? '') === 'code')<pre class="overflow-auto rounded-2xl bg-[#0d294d] p-5 text-sm leading-6 text-teal-200"><code>{{ $block['code'] ?? $block['text'] ?? '' }}</code></pre>@elseif (($block['type'] ?? '') === 'heading')<h3 class="pt-4 text-2xl font-bold text-[#102b50]">{{ $block['text'] }}</h3>@endif @endforeach</div>
+                <div class="mt-10 grid gap-4 border-t pt-6 lg:grid-cols-2"><form method="post" action="{{ route('annotations.store', $topic) }}" class="rounded-xl border p-4">@csrf<label class="block text-sm font-semibold">Simpan catatan<select name="type" class="mt-2 w-full rounded-lg border p-3"><option value="highlight">Highlight</option><option value="bookmark">Bookmark</option></select></label><textarea name="selected_text" class="mt-3 w-full rounded-lg border p-3 text-sm" maxlength="5000" placeholder="Teks penting..."></textarea><textarea name="note" class="mt-3 w-full rounded-lg border p-3 text-sm" maxlength="1000" placeholder="Catatan pribadi..."></textarea><button class="mt-3 rounded-lg border px-4 py-2 text-sm font-semibold">Simpan catatan</button></form><section class="rounded-xl bg-slate-50 p-4"><h3 class="font-semibold">Catatan saya</h3>@forelse ($annotations as $annotation)<article class="mt-3 rounded-lg bg-white p-3 text-sm"><p class="font-semibold">{{ $annotation->type === 'highlight' ? 'Highlight' : 'Bookmark' }}</p><p class="mt-1">{{ $annotation->selected_text }}</p><p class="mt-1 text-slate-600">{{ $annotation->note }}</p><form method="post" action="{{ route('annotations.destroy', $annotation) }}">@csrf @method('delete')<button class="mt-2 text-red-700">Hapus</button></form></article>@empty<p class="mt-3 text-sm text-slate-500">Belum ada catatan.</p>@endforelse</section></div>
+            </section>
+            <div class="mt-6 flex flex-col justify-between gap-3 sm:flex-row">@if ($previous)<a class="rounded-xl bg-white px-5 py-4 font-semibold shadow-sm" href="{{ route('topics.show', $previous) }}">← Topik sebelumnya</a>@else<span></span>@endif <div class="flex flex-col gap-3 sm:flex-row">@if (!$progress->completed_at)<form method="post" action="{{ route('topics.complete', $topic) }}">@csrf<button class="rounded-xl bg-teal-500 px-5 py-4 font-bold text-[#102b50]">Tandai selesai ✓</button></form>@else<span class="rounded-xl bg-teal-100 px-5 py-4 font-bold text-teal-800">Topik selesai ✓</span>@endif @if ($next)<a class="rounded-xl bg-[#0d294d] px-5 py-4 font-semibold text-white" href="{{ route('topics.show', $next) }}">Topik berikutnya →</a>@elseif ($moduleQuiz)<a class="rounded-xl bg-[#0d294d] px-5 py-4 font-semibold text-white" href="{{ route('quizzes.show', $moduleQuiz) }}">Lanjut ke kuis →</a>@endif</div></div>
+            @if ($topic->understanding)<p class="mt-3 text-right text-sm text-slate-500">Selesaikan Check Your Understanding untuk membuka kuis modul.</p>@endif
         </article>
-    </main>
-</body>
-</html>
+    </div>
+</div></main><x-student-nav />
+</body></html>

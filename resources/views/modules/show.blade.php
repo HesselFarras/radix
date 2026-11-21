@@ -1,30 +1,36 @@
 <!doctype html>
 <html lang="id">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{{ $module->title }} | Radix</title>@if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot'))) @vite(['resources/css/app.css', 'resources/js/app.js']) @endif</head>
-<body class="min-h-screen bg-slate-100 text-slate-900">
-    <main class="mx-auto max-w-5xl p-6">
-        <a class="text-sm" href="{{ route('dashboard') }}">← Kembali ke Dashboard</a>
-        <h1 class="mt-4 text-3xl font-bold">{{ $module->title }}</h1>
-        <p class="mt-2 text-slate-600">{{ $module->description }}</p>
-        <section class="mt-8 space-y-3">
-            @foreach ($module->topics as $topic)
-                <article class="rounded-xl bg-white p-4 shadow-sm">
-                    <div class="flex items-center justify-between gap-4">
-                        <div><h2 class="font-semibold">{{ $topic->title }}</h2><p class="text-sm text-slate-500">Estimasi {{ $topic->estimated_minutes }} menit</p></div>
-                        <span class="text-sm">{{ $completedTopicIds->contains($topic->id) ? 'Selesai' : 'Belum' }}</span>
-                    </div>
-                    <a class="mt-3 inline-block rounded-lg bg-slate-900 px-4 py-2 text-sm text-white" href="{{ route('topics.show', $topic) }}">Baca materi</a>
-                </article>
-            @endforeach
-        </section>
-        <section class="mt-8 rounded-xl bg-white p-5">
-            <h2 class="text-xl font-bold">Kuis modul</h2>
-            @forelse ($module->quizzes as $quiz)
-                <a class="mt-4 inline-block rounded-lg bg-teal-700 px-5 py-3 text-white" href="{{ route('quizzes.show', $quiz) }}">Mulai {{ $quiz->title }}</a>
-            @empty
-                <p class="mt-2 text-slate-600">Kuis belum tersedia.</p>
-            @endforelse
-        </section>
-    </main>
-</body>
-</html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>{{ $module->title }} | Radix</title>@vite(['resources/css/app.css','resources/js/app.js'])</head>
+<body class="min-h-screen bg-[#F7F9FF] pb-24 text-[#000D25] md:pb-8">
+<x-student-header />
+@php
+    $moduleTopicIds = $module->topics->pluck('id');
+    $completed = $completedTopicIds->intersect($moduleTopicIds)->count();
+    $modulePercent = $module->topics->count() ? round($completed / $module->topics->count() * 100) : 0;
+    $activeTopic = $module->topics->first(fn ($topic) => ! $completedTopicIds->contains($topic->id));
+@endphp
+<main class="pt-[73px]"><div class="h-1 bg-[#D7EAFF]"><div class="h-full bg-[#006B59]" style="width:{{ $modulePercent }}%"></div></div>
+<div class="mx-auto flex w-full max-w-[1440px] flex-col gap-6 px-4 py-6 sm:px-8 lg:px-16"><div class="flex items-center justify-between text-sm"><a class="font-semibold text-[#000D25]" href="{{ route('dashboard') }}">← Kembali ke Dashboard</a><nav class="hidden text-xs text-[#44474E] sm:block">Dashboard <span class="mx-1 text-[#C4C6CF]">›</span> Modul <span class="mx-1 text-[#C4C6CF]">›</span> <strong class="text-[#000D25]">{{ $module->title }}</strong></nav></div>
+<div class="grid gap-6 lg:grid-cols-[280px_minmax(0,978px)] lg:justify-between">
+<aside class="h-fit rounded-xl bg-white p-5 shadow-sm lg:sticky lg:top-24"><div class="flex items-center justify-between"><p class="text-xs font-semibold uppercase tracking-[.6px] text-[#006B59]">Module syllabus</p><span class="font-mono text-[13px] text-[#44474E]">{{ $modulePercent }}%</span></div><h1 class="mt-3 text-xl font-semibold leading-[25px]">{{ $module->title }}</h1><div class="mt-4 h-2 rounded-full bg-[#D7EAFF]"><div class="h-full rounded-full bg-[#006B59]" style="width:{{ $modulePercent }}%"></div></div><p class="mt-1 text-xs text-[#44474E]">{{ $completed }} dari {{ $module->topics->count() }} topik selesai</p><div class="my-4 h-px bg-[#D7EAFF]"></div><nav class="space-y-1.5" aria-label="Daftar topik">@foreach($module->topics as $topic)<a href="{{ route('topics.show',$topic) }}" class="flex min-h-[52px] items-center justify-between rounded-lg px-3 py-3 {{ $topic->is($activeTopic) ? 'bg-[#69FAD8]/30 font-semibold shadow-sm' : 'text-[#44474E]' }}"><span class="flex min-w-0 items-center gap-2"><span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full {{ $completedTopicIds->contains($topic->id) ? 'bg-[#69FAD8]/40 text-[#006B59]' : ($topic->is($activeTopic) ? 'bg-[#000D25] text-[#69FAD8]' : 'bg-[#ECF4FF] text-[#44474E]') }}">{{ $completedTopicIds->contains($topic->id) ? '✓' : $loop->iteration }}</span><span class="truncate text-sm">{{ $topic->title }}</span></span>@if($topic->is($activeTopic))<span class="rounded-full bg-[#000D25] px-2 py-0.5 font-mono text-[10px] uppercase text-white">aktif</span>@endif</a>@endforeach</nav><div class="my-4 h-px bg-[#D7EAFF]"></div>@foreach($module->quizzes as $quiz)<a class="flex items-center gap-3 rounded-lg bg-[#ECF4FF] p-3" href="{{ route('quizzes.show',$quiz) }}"><span class="flex h-8 w-8 items-center justify-center rounded-lg bg-white">▣</span><span><strong class="block text-sm">Check Your Understanding</strong><small class="text-xs text-[#44474E]">{{ $quiz->questions->count() }} pertanyaan</small></span></a>@endforeach</aside>
+<section class="min-w-0"><header class="flex flex-col gap-4 pb-2 sm:flex-row sm:items-end sm:justify-between"><div><div class="flex flex-wrap gap-2 text-xs font-semibold"><span class="rounded-full bg-[#69FAD8]/40 px-3 py-1 text-[#00725E]">MODUL {{ $module->order ?? '' }}</span><span class="rounded-full bg-white px-3 py-1 text-[#44474E] shadow-sm">{{ $module->topics->count() }} topik</span><span class="rounded-full bg-white px-3 py-1 text-[#44474E] shadow-sm">{{ $modulePercent }}% selesai</span></div><h2 class="mt-3 text-3xl font-bold tracking-[-1px] sm:text-[40px]">{{ $module->title }}</h2></div><div class="flex h-11 w-fit items-center gap-1 rounded-lg bg-white p-1 shadow-sm" aria-label="Pengaturan reader"><button type="button" class="h-9 w-9 rounded-lg font-mono text-sm text-[#44474E]" aria-label="Perkecil teks">A−</button><button type="button" class="h-9 w-9 rounded-lg font-mono text-base text-[#44474E]" aria-label="Perbesar teks">A+</button><span class="h-5 w-px bg-[#D7EAFF]"></span><button type="button" class="h-9 w-9 rounded-lg bg-[#69FAD8]" aria-label="Toggle stabilo">▰</button><button type="button" class="h-9 w-9 rounded-lg text-[#44474E]" aria-label="Simpan bookmark">▯</button></div></header>
+@php
+    $exampleSql = match ($module->slug) {
+        'sql-dan-query' => "SELECT m.nama, b.judul_buku\nFROM peminjaman p\nINNER JOIN mahasiswa m ON p.nim = m.nim\nINNER JOIN buku b ON p.id_buku = b.id_buku;",
+        'keamanan-database' => "SELECT username, role\nFROM database_users\nWHERE is_active = 1;",
+        'desain-database' => "CREATE TABLE mahasiswa (\n    nim VARCHAR(12) PRIMARY KEY,\n    nama VARCHAR(100) NOT NULL\n);",
+        default => "CREATE DATABASE radix_learning;\nUSE radix_learning;\nSELECT * FROM informasi_database;",
+    };
+@endphp
+<article class="rounded-xl bg-white p-6 shadow-[0_2px_8px_rgba(11,35,69,.04)] sm:p-10"><div class="space-y-4 text-base leading-6 text-[#44474E]"><p>{{ $module->description }}</p><p>Pelajari setiap topik secara berurutan, lalu praktikkan konsepnya melalui contoh dan latihan yang tersedia. Materi disusun bertahap agar setiap konsep mudah dipahami.</p></div><div class="mt-6 overflow-hidden rounded-xl bg-[#0B2345] text-[#69FAD8] shadow-md"><div class="flex items-center justify-between bg-[#002736]/80 px-5 py-3"><span class="flex items-center gap-2"><i class="h-3 w-3 rounded-full bg-[#BA1A1A]"></i><i class="h-3 w-3 rounded-full bg-[#69FAD8]"></i><i class="h-3 w-3 rounded-full bg-[#006B59]"></i><span class="ml-2 font-mono text-xs uppercase tracking-[.6px] text-[#768BB3]">sql-editor.sql</span></span><span class="rounded bg-white/10 px-3 py-1 text-xs font-semibold text-white">Copy</span></div><pre class="overflow-x-auto px-5 py-5 font-mono text-sm leading-6"><code>{{ $exampleSql }}</code></pre><div class="flex items-center justify-between bg-[#000D25]/60 px-5 py-2.5 font-mono text-xs"><span class="text-[#768BB3]">read-only example</span><span class="flex items-center gap-1"><i class="h-1.5 w-1.5 rounded-full bg-[#69FAD8]"></i>Query siap dipelajari</span></div></div>
+<div class="mt-8 border-t border-[#D7EAFF] pt-6"><p class="font-mono text-xs font-semibold uppercase tracking-[.65px] text-[#006B59]">Sub-materi</p><h3 class="mt-2 text-2xl font-semibold">Daftar Topik</h3><p class="mt-1 text-sm text-[#44474E]">Pilih topik yang sesuai berdasarkan progres belajarmu.</p><div class="mt-5 grid gap-4 sm:grid-cols-3">@php
+    $concepts = match ($module->slug) {
+        'sql-dan-query' => [['SELECT','Mengambil data'],['WHERE','Menyaring data'],['JOIN','Menggabungkan tabel']],
+        'keamanan-database' => [['Autentikasi','Memastikan identitas'],['Hak Akses','Mengatur izin'],['Backup','Memulihkan data']],
+        'desain-database' => [['ERD','Memetakan entitas'],['Normalisasi','Mengurangi redundansi'],['Relasi','Menghubungkan data']],
+        default => [['Data','Informasi bernilai'],['Tabel','Struktur penyimpanan'],['Relasional','Koneksi antar data']],
+    };
+@endphp
+@foreach($concepts as $join)<div class="rounded-xl bg-[#ECF4FF] p-5 text-center"><div class="mx-auto mb-4 flex h-20 items-center justify-center"><span class="h-16 w-16 rounded-full border-2 border-[#000D25]"></span><span class="-ml-8 h-16 w-16 rounded-full border-2 border-[#000D25]"></span></div><h4 class="text-sm font-semibold">{{ $join[0] }}</h4><p class="mt-2 text-xs text-[#44474E]">{{ $join[1] }} dari tabel yang digabungkan.</p><code class="mt-3 inline-block rounded bg-white px-2 py-1 font-mono text-[11px]">ON table.id</code></div>@endforeach</div></div>
+<div class="mt-6 flex items-start gap-4 rounded-xl bg-[#69FAD8]/20 p-5"><span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm">✦</span><div><h4 class="font-bold">Tips praktik</h4><p class="mt-1 text-sm leading-5 text-[#031D30]">Gunakan alias tabel seperti <code class="rounded bg-white px-1.5 py-0.5 font-mono text-xs">m</code>, <code class="rounded bg-white px-1.5 py-0.5 font-mono text-xs">p</code>, dan <code class="rounded bg-white px-1.5 py-0.5 font-mono text-xs">b</code> agar query lebih ringkas.</p></div></div></article>
+<footer class="flex flex-col gap-3 pt-2 sm:flex-row sm:items-center sm:justify-between">@if($activeTopic)<a class="rounded-xl bg-white px-6 py-3 text-center text-sm font-semibold shadow-sm" href="{{ route('topics.show',$activeTopic) }}">Mulai materi →</a>@else<span></span>@endif @foreach($module->quizzes as $quiz)<a class="rounded-xl bg-[#000D25] px-8 py-3 text-center text-sm font-semibold text-white shadow-sm" href="{{ route('quizzes.show',$quiz) }}">Check Your Understanding →</a>@endforeach</footer></section></div></div></main><x-student-nav /></body></html>

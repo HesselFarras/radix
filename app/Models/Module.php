@@ -39,6 +39,11 @@ class Module extends Model
         return $this->hasMany(Lab::class)->orderBy('sort_order');
     }
 
+    public function erdPuzzles(): HasMany
+    {
+        return $this->hasMany(ErdPuzzle::class);
+    }
+
     public function isCompletedBy(User $user, Collection $completedTopicIds, Collection $passedQuizIds): bool
     {
         $topicsDone = $this->topics->isNotEmpty() && $this->topics->every(fn (Topic $topic) => $completedTopicIds->contains($topic->id));
@@ -49,7 +54,11 @@ class Module extends Model
 
     public function isUnlockedFor(User $user, Collection $completedTopicIds, Collection $passedQuizIds): bool
     {
-        $previous = $this->course->modules->firstWhere('sort_order', $this->sort_order - 1);
+        $previous = $this->course->modules
+            ->where('is_published', true)
+            ->where('sort_order', '<', $this->sort_order)
+            ->sortByDesc('sort_order')
+            ->first();
 
         return $previous === null || $previous->isCompletedBy($user, $completedTopicIds, $passedQuizIds);
     }

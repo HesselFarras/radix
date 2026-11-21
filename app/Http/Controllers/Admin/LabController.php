@@ -25,11 +25,58 @@ class LabController extends Controller
             'description' => ['nullable', 'string'], 'mode' => ['required', 'in:practice,challenge'],
             'schema_json' => ['nullable', 'json'], 'sort_order' => ['required', 'integer', 'min:1'],
         ]);
-        $data['schema_json'] = $data['schema_json'] ? json_decode($data['schema_json'], true, 512, JSON_THROW_ON_ERROR) : null;
+        try {
+            $data['schema_json'] = $data['schema_json'] ? json_decode($data['schema_json'], true, 512, JSON_THROW_ON_ERROR) : null;
+        } catch (\JsonException) {
+            return back()->withErrors(['schema_json' => 'Schema JSON tidak valid.'])->withInput();
+        }
         $data['is_published'] = $request->boolean('is_published');
         Lab::create($data);
 
         return back()->with('status', 'SQL Lab dibuat.');
+    }
+
+    public function update(Request $request, Lab $lab): RedirectResponse
+    {
+        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'description' => ['nullable', 'string'], 'mode' => ['required', 'in:practice,challenge'], 'schema_json' => ['nullable', 'json'], 'sort_order' => ['required', 'integer', 'min:1']]);
+        try {
+            $data['schema_json'] = $data['schema_json'] ? json_decode($data['schema_json'], true, 512, JSON_THROW_ON_ERROR) : null;
+        } catch (\JsonException) {
+            return back()->withErrors(['schema_json' => 'Schema JSON tidak valid.'])->withInput();
+        }
+        $data['is_published'] = $request->boolean('is_published');
+        $lab->update($data);
+
+        return back()->with('status', 'SQL Lab diperbarui.');
+    }
+
+    public function updateStep(Request $request, Lab $lab, LabStep $step): RedirectResponse
+    {
+        abort_unless($step->lab_id === $lab->id, 404);
+        $data = $request->validate(['title' => ['required', 'string', 'max:255'], 'instruction' => ['required', 'string'], 'expected_result_json' => ['nullable', 'json'], 'reference_query' => ['nullable', 'string'], 'xp_reward' => ['required', 'integer', 'min:0'], 'sort_order' => ['required', 'integer', 'min:1']]);
+        try {
+            $data['expected_result_json'] = $data['expected_result_json'] ? json_decode($data['expected_result_json'], true, 512, JSON_THROW_ON_ERROR) : null;
+        } catch (\JsonException) {
+            return back()->withErrors(['expected_result_json' => 'Expected result JSON tidak valid.'])->withInput();
+        }
+        $step->update($data);
+
+        return back()->with('status', 'Langkah diperbarui.');
+    }
+
+    public function destroy(Lab $lab): RedirectResponse
+    {
+        $lab->delete();
+
+        return back()->with('status', 'SQL Lab dihapus.');
+    }
+
+    public function destroyStep(Lab $lab, LabStep $step): RedirectResponse
+    {
+        abort_unless($step->lab_id === $lab->id, 404);
+        $step->delete();
+
+        return back()->with('status', 'Langkah Lab dihapus.');
     }
 
     public function storeStep(Request $request, Lab $lab): RedirectResponse
@@ -39,7 +86,11 @@ class LabController extends Controller
             'expected_result_json' => ['nullable', 'json'], 'reference_query' => ['nullable', 'string'],
             'xp_reward' => ['required', 'integer', 'min:0'], 'sort_order' => ['required', 'integer', 'min:1'],
         ]);
-        $data['expected_result_json'] = $data['expected_result_json'] ? json_decode($data['expected_result_json'], true, 512, JSON_THROW_ON_ERROR) : null;
+        try {
+            $data['expected_result_json'] = $data['expected_result_json'] ? json_decode($data['expected_result_json'], true, 512, JSON_THROW_ON_ERROR) : null;
+        } catch (\JsonException) {
+            return back()->withErrors(['expected_result_json' => 'Expected result JSON tidak valid.'])->withInput();
+        }
         $data['lab_id'] = $lab->id;
         LabStep::create($data);
 

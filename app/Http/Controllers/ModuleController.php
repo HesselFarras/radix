@@ -9,10 +9,10 @@ class ModuleController extends Controller
 {
     public function show(Module $module): View
     {
-        abort_unless($module->is_published, 404);
+        abort_unless($module->is_published && $module->course()->where('is_published', true)->exists(), 404);
 
         $user = auth()->user();
-        $module->load(['course.modules.topics', 'course.modules.quizzes', 'topics', 'quizzes']);
+        $module->load(['course.modules' => fn ($query) => $query->where('is_published', true), 'course.modules.topics' => fn ($query) => $query->where('is_published', true), 'course.modules.quizzes' => fn ($query) => $query->where('is_published', true), 'topics' => fn ($query) => $query->where('is_published', true), 'quizzes' => fn ($query) => $query->where('is_published', true)]);
         $completedTopicIds = $user->topicProgress()
             ->whereIn('topic_id', $module->course->modules->flatMap->topics->pluck('id'))
             ->whereNotNull('completed_at')

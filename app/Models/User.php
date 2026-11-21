@@ -84,6 +84,11 @@ class User extends Authenticatable
         return $this->hasMany(QuizAttempt::class);
     }
 
+    public function understandingAttempts(): HasMany
+    {
+        return $this->hasMany(UnderstandingAttempt::class);
+    }
+
     public function badges(): BelongsToMany
     {
         return $this->belongsToMany(Badge::class, 'user_badges')->withPivot('awarded_at');
@@ -92,5 +97,10 @@ class User extends Authenticatable
     public function erdAttempts(): HasMany
     {
         return $this->hasMany(ErdAttempt::class);
+    }
+
+    public function labAttempts(): HasMany
+    {
+        return $this->hasMany(LabAttempt::class);
     }
 }

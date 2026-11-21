@@ -30,6 +30,7 @@ class QuizFlowTest extends TestCase
         $this->assertSame(100, $user->fresh()->total_xp);
 
         $this->actingAs($user)->post(route('quizzes.submit', $quiz), ['answers' => [$question->id => $correct->id]])->assertOk();
-        $this->assertSame(200, $user->fresh()->total_xp);
+        $this->assertSame(100, $user->fresh()->total_xp);
+        $this->assertDatabaseCount('xp_transactions', 1);
     }
 }
